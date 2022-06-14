@@ -1,32 +1,35 @@
-import { StyleSheet } from 'react-native';
+import {Text, TouchableOpacity, View, Image} from 'react-native';
+import React, {useEffect} from 'react';
 
-import EditScreenInfo from '../components/EditScreenInfo';
-import { Text, View } from '../components/Themed';
-import { RootTabScreenProps } from '../types';
+import {useAppSelector, useAppDispatch} from '../hooks/reduxHooks';
+import {fetchGifRequest} from '../redux/reducers/gifExempleReducer';
 
-export default function TabOneScreen({ navigation }: RootTabScreenProps<'TabOne'>) {
+export const TabOneScreen = () => {
+  const image = useAppSelector(state => state.gifExempleReducer.value);
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    console.log(image);
+  }, [image]);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/TabOneScreen.tsx" />
+    <View>
+      <TouchableOpacity
+        onPress={() => {
+          dispatch(fetchGifRequest());
+        }}>
+        <Text
+          style={{
+            backgroundColor: 'red',
+            alignSelf: 'center',
+            margin: 100,
+            width: 100
+          }}>
+          Bouton
+        </Text>
+        {image ? (
+          <Image source={{uri: image}} style={{width: 400, height: 400}} />
+        ) : null}
+      </TouchableOpacity>
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
+};
