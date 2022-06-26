@@ -1,10 +1,10 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
-interface TGifExampleState {
+interface CounterState {
   value: string;
 }
 
-const initialState: TGifExampleState = {
+const initialState: CounterState = {
   value: ''
 };
 
@@ -16,10 +16,10 @@ export const fetchGif = createSlice({
       console.log('saga will be called');
     },
 
-    fetchGifSuccess: (state, action: PayloadAction<string>) => {
+    fetchGifSucccess: (state, action: PayloadAction<string>) => {
       state.value = action.payload;
     }
   }
 });
 
-export const {fetchGifRequest, fetchGifSuccess} = fetchGif.actions;
+export const {fetchGifRequest, fetchGifSucccess} = fetchGif.actions;
