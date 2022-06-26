@@ -1,9 +1,8 @@
 import {
-  Alert,
   Animated,
+  Image,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity
 } from 'react-native';
 import {faker} from '@faker-js/faker';
@@ -11,6 +10,8 @@ import {useEffect, useRef, useState} from 'react';
 
 import {View} from '../components/Themed';
 import {KeyBoard} from '../components/keyBoard';
+import {fetchGifRequest} from '../redux/reducers/gifExempleReducer';
+import {useAppSelector, useAppDispatch} from '../hooks/reduxHooks';
 
 export default function GameScreen() {
   faker.setLocale('fr');
@@ -22,6 +23,9 @@ export default function GameScreen() {
   const [countDown, setCountDown] = useState(15);
 
   const wordAnimationRef = useRef(new Animated.Value(0)).current;
+  const dispatch = useAppDispatch();
+
+  const image = useAppSelector(state => state.gifExempleReducer.value);
 
   useEffect(() => {
     if (word === wordInput && word) {
@@ -64,6 +68,9 @@ export default function GameScreen() {
           .join('')
       );
     }
+    if (letter === '<=') {
+      return setWordInput('');
+    }
     if (word.split('')[wordInput.length] !== letter) {
       setColor('red');
     } else {
@@ -78,16 +85,16 @@ export default function GameScreen() {
   };
 
   const launchGame = () => {
+    const word = faker.random
+      .word()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
     setCountDown(15);
     wordAnimationRef.setValue(280);
     setWordInput('');
-    setWord(
-      faker.random
-        .word()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-    );
+    setWord(word);
+    dispatch(fetchGifRequest(word));
     wordAnimation.start();
     setRound(round + 1);
   };
@@ -108,25 +115,38 @@ export default function GameScreen() {
           SCORE : {score}
         </Text>
 
-        <TouchableOpacity
-          disabled={score !== 0}
-          style={{marginTop: 40}}
-          onPress={() => {
-            launchGame();
-          }}>
-          <Text
+        {image && round !== 0 ? (
+          <View
             style={{
               borderWidth: 4,
-              paddingVertical: 20,
               borderRadius: 20,
-              textAlign: 'center',
               margin: 10,
               width: 100,
-              opacity: score !== 0 ? 0.5 : 1
+              overflow: 'hidden'
             }}>
-            PLAY
-          </Text>
-        </TouchableOpacity>
+            <Image source={{uri: image}} style={{width: 100, height: 100}} />
+          </View>
+        ) : (
+          <TouchableOpacity
+            disabled={score !== 0}
+            style={{marginTop: 40}}
+            onPress={() => {
+              launchGame();
+            }}>
+            <Text
+              style={{
+                borderWidth: 4,
+                paddingVertical: 20,
+                borderRadius: 20,
+                textAlign: 'center',
+                opacity: score !== 0 ? 0.3 : 1,
+                margin: 10,
+                width: 100
+              }}>
+              PLAY
+            </Text>
+          </TouchableOpacity>
+        )}
         <Text
           style={{
             paddingVertical: 20,

@@ -11,14 +11,12 @@ export function* getGifExempleSaga() {
       console.log('log data');
 
       response = await axios.get(
-        `https://api.giphy.com/v1/gifs/search?api_key=bE364rLRlcu5aRRhpQtUqksJOJLzbrqv&q=${payload}&limit=25&offset=0&rating=g&lang=fr`
+        `https://api.giphy.com/v1/gifs/search?api_key=bE364rLRlcu5aRRhpQtUqksJOJLzbrqv&q=${payload}&limit=1&offset=0&rating=g&lang=fr`
       );
     });
     console.log('call success');
-    yield put(
-      fetchGifSucccess(
-        response.data.data[Math.floor(Math.random() * 24)].images.original.url
-      )
-    );
+    console.log(payload);
+
+    yield put(fetchGifSucccess(response.data.data[0].images.original.url));
   });
 }

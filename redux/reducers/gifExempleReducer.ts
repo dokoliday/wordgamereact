@@ -12,8 +12,8 @@ export const fetchGif = createSlice({
   name: 'counter',
   initialState,
   reducers: {
-    fetchGifRequest: () => {
-      console.log('saga will be called');
+    fetchGifRequest: (state, action) => {
+      console.log(action);
     },
 
     fetchGifSucccess: (state, action: PayloadAction<string>) => {

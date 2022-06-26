@@ -1,4 +1,4 @@
-import {Text, TouchableOpacity, View} from 'react-native';
+import {Text, TouchableOpacity, Vibration, View} from 'react-native';
 import React from 'react';
 
 export const KeyBoard = ({onKeyBoardTap}) => {
@@ -29,7 +29,8 @@ export const KeyBoard = ({onKeyBoardTap}) => {
     'v',
     'b',
     'n',
-    '<'
+    '<',
+    '<='
   ];
 
   return (
@@ -44,7 +45,10 @@ export const KeyBoard = ({onKeyBoardTap}) => {
       {letters.map((letter, index) => (
         <TouchableOpacity
           key={index}
-          onPress={() => onKeyBoardTap(letter)}
+          onPress={() => {
+            onKeyBoardTap(letter);
+            Vibration.vibrate(100);
+          }}
           style={{
             width: 35,
             height: 35,
