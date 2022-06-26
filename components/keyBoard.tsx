@@ -1,7 +1,7 @@
-import {Text, TouchableOpacity, View, Image, Button} from 'react-native';
-import React, {useEffect} from 'react';
+import {Text, TouchableOpacity, View} from 'react-native';
+import React from 'react';
 
-export const KeyBoard = ({callback}) => {
+export const KeyBoard = ({onKeyBoardTap}) => {
   const letters = [
     'a',
     'z',
@@ -28,7 +28,8 @@ export const KeyBoard = ({callback}) => {
     'c',
     'v',
     'b',
-    'n'
+    'n',
+    '<'
   ];
 
   return (
@@ -37,20 +38,24 @@ export const KeyBoard = ({callback}) => {
         display: 'flex',
         flexDirection: 'row',
         width: '100%',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        justifyContent: 'center'
       }}>
-      {letters.map(letter => (
+      {letters.map((letter, index) => (
         <TouchableOpacity
-          onPress={() => callback(letter)}
+          key={index}
+          onPress={() => onKeyBoardTap(letter)}
           style={{
-            width: 40,
-            height: 40,
+            width: 35,
+            height: 35,
+            borderRadius: 10,
             borderColor: 'black',
             borderWidth: 2,
-
-            margin: 10
+            margin: 3
           }}>
-          <Text>{letter}</Text>
+          <Text style={{textAlign: 'center', fontWeight: 'bold'}}>
+            {letter}
+          </Text>
         </TouchableOpacity>
       ))}
     </View>
