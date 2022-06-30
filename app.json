@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "first-expo-project",
-    "slug": "first-expo-project",
+    "name": "wordgamereact",
+    "slug": "wordgamereact",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,9 +15,7 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
