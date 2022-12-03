@@ -1,13 +1,12 @@
 import {Text, TouchableOpacity, Vibration, View} from 'react-native';
 import React from 'react';
 import {blue, darkBlue} from '../../assets/colors';
-import {letters} from './keyBoardPatterns';
 import {TRootState} from '../../redux/types';
 import {useSelector} from 'react-redux';
 import {useAppDispatch} from '../../hooks/reduxHooks';
 import {setWordInput} from '../../redux/reducers/gameReducer';
 
-export const KeyBoard = ({}) => {
+export const KeyBoard = ({keyBoard}) => {
   const {wordinput} = useSelector((state: TRootState) => state.gameReducer);
 
   const dispatch = useAppDispatch();
@@ -47,7 +46,7 @@ export const KeyBoard = ({}) => {
         justifyContent: 'center',
         backgroundColor: darkBlue
       }}>
-      {letters.map((letter, index) => (
+      {keyBoard.map((letter, index) => (
         <TouchableOpacity
           key={index}
           onPress={() => {

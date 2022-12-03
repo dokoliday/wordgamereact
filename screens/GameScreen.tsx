@@ -1,3 +1,4 @@
+import React, {useEffect, useRef} from 'react';
 import {
   Animated,
   SafeAreaView,
@@ -5,26 +6,35 @@ import {
   Text,
   TouchableOpacity
 } from 'react-native';
+import {useSelector} from 'react-redux';
+
 import {TRootState} from '../redux/types';
 import {faker} from '@faker-js/faker';
-import React, {useEffect, useRef, useState} from 'react';
 
 import {View} from '../components/Themed';
-import {KeyBoard} from '../components/keyboard/keyBoard';
+import {KeyBoard} from '../components/keyboard/keyboard';
 import {useAppDispatch} from '../hooks/reduxHooks';
-import {darkBlue} from '../assets/colors';
-import {useSelector} from 'react-redux';
-import {setWord} from '../redux/reducers/gameReducer';
+import {darkBlue, yellow} from '../assets/colors';
+import {
+  setKeyboard,
+  setLife,
+  setScore,
+  setWord,
+  setWordInput
+} from '../redux/reducers/gameReducer';
+import {keyBoardPatterns} from '../components/keyboard/keyboardPatterns';
 
 export default function GameScreen({navigation}) {
-  const {word, wordinput, score} = useSelector(
+  const {word, wordinput, score, keyboard, life} = useSelector(
     (state: TRootState) => state.gameReducer
   );
   faker.setLocale('fr');
 
   const wordAnimationRef = useRef(new Animated.Value(0)).current;
   const dispatch = useAppDispatch();
+
   useEffect(() => {
+    dispatch(setScore({score: 0}));
     launchGame();
   }, []);
 
@@ -34,6 +44,16 @@ export default function GameScreen({navigation}) {
     }
   }, [score]);
 
+  useEffect(() => {
+    if (life > 0) {
+      launchGame();
+    } else {
+      wordAnimation.stop();
+      dispatch(setLife({life: 3}));
+      navigation.navigate('Home');
+    }
+  }, [life]);
+
   const wordAnimation = Animated.timing(wordAnimationRef, {
     toValue: 400,
     duration: 5000,
@@ -41,6 +61,12 @@ export default function GameScreen({navigation}) {
   });
 
   const launchGame = () => {
+    wordAnimationRef.setValue(0);
+
+    dispatch(
+      setKeyboard({keyboard: keyBoardPatterns.regular.qwertyKeyboardLetters()})
+    );
+
     dispatch(
       setWord({
         word: faker.random
@@ -52,11 +78,10 @@ export default function GameScreen({navigation}) {
     );
 
     wordAnimation.start(({finished}) => {
+      dispatch(setWordInput({wordinput: ''}));
       if (finished) {
-        navigation.navigate('Home');
+        dispatch(setLife({life: life - 1}));
       }
-
-      wordAnimationRef.setValue(0);
     });
   };
 
@@ -94,20 +119,11 @@ export default function GameScreen({navigation}) {
           );
         })}
       </Animated.View>
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 220,
-          height: 50,
-          padding: 10,
-          alignSelf: 'center',
-          borderRadius: 40,
-          width: '80%'
-        }}>
+      <View style={styles.wordInputContainer}>
         <Text style={styles.wordInput}>{wordinput ? `${wordinput}` : ''}</Text>
       </View>
-      <View style={{position: 'absolute', bottom: 70}}>
-        <KeyBoard />
+      <View style={styles.keyboard}>
+        <KeyBoard keyBoard={keyboard} />
       </View>
     </SafeAreaView>
   );
@@ -122,7 +138,8 @@ const styles = StyleSheet.create({
   scoreTexte: {
     paddingVertical: 20,
     margin: 10,
-    color: 'white',
+    color: yellow,
+
     fontSize: 20,
     fontWeight: 'bold',
     top: 10
@@ -132,6 +149,15 @@ const styles = StyleSheet.create({
     fontSize: 40,
     marginTop: 40,
     fontWeight: 'bold'
+  },
+  wordInputContainer: {
+    position: 'absolute',
+    bottom: 220,
+    height: 50,
+    padding: 10,
+    alignSelf: 'center',
+    borderRadius: 40,
+    width: '80%'
   },
   wordInput: {
     textAlign: 'center',
@@ -143,5 +169,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexDirection: 'row',
     backgroundColor: 'rgba(0,0,0,0)'
-  }
+  },
+  keyboard: {position: 'absolute', bottom: 70}
 });
