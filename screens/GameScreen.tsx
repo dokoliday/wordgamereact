@@ -23,12 +23,15 @@ import {
   setWordInput
 } from '../redux/reducers/gameReducer';
 import {keyBoardPatterns} from '../components/keyboard/keyboardPatterns';
+import {TGame} from './HomeScreen';
 
-export default function GameScreen({navigation}) {
+export default function GameScreen({navigation, route}) {
   const {word, wordinput, score, keyboard, life} = useSelector(
     (state: TRootState) => state.gameReducer
   );
   faker.setLocale('fr');
+
+  const game: TGame = route.params.game;
 
   const wordAnimationRef = useRef(new Animated.Value(0)).current;
   const dispatch = useAppDispatch();
@@ -36,6 +39,9 @@ export default function GameScreen({navigation}) {
   useEffect(() => {
     dispatch(setScore({score: 0}));
     launchGame();
+    return () => {
+      dispatch(setLife({life: 3}));
+    };
   }, []);
 
   useEffect(() => {
@@ -45,7 +51,7 @@ export default function GameScreen({navigation}) {
   }, [score]);
 
   useEffect(() => {
-    if (life > 0) {
+    if (life > 0 || game.life === 'infinite') {
       launchGame();
     } else {
       wordAnimation.stop();
@@ -56,7 +62,12 @@ export default function GameScreen({navigation}) {
 
   const wordAnimation = Animated.timing(wordAnimationRef, {
     toValue: 400,
-    duration: 5000,
+    duration:
+      game.speedLevel === 'easy'
+        ? 10000
+        : game.speedLevel === 'medium'
+        ? 7000
+        : 4000,
     useNativeDriver: true
   });
 
@@ -64,7 +75,14 @@ export default function GameScreen({navigation}) {
     wordAnimationRef.setValue(0);
 
     dispatch(
-      setKeyboard({keyboard: keyBoardPatterns.regular.qwertyKeyboardLetters()})
+      setKeyboard({
+        keyboard:
+          game.keyboard === 'azerty'
+            ? keyBoardPatterns.regular.azertyKeyboardLetters()
+            : game.keyboard === 'querty'
+            ? keyBoardPatterns.regular.qwertyKeyboardLetters()
+            : keyBoardPatterns.shuffle()
+      })
     );
 
     dispatch(
@@ -88,11 +106,19 @@ export default function GameScreen({navigation}) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.scoreTexte}>SCORE : {score}</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-          <Text style={styles.scoreTexte}>X</Text>
+          <Text style={styles.scoreTexte}>retour</Text>
         </TouchableOpacity>
+        <Text style={styles.scoreTexte}>SCORE : {score}</Text>
+        <View style={{flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0)'}}>
+          {Array(life)
+            .fill('')
+            .map(e => {
+              return <Text style={styles.scoreTexte}>X</Text>;
+            })}
+        </View>
       </View>
+
       <Animated.View
         style={{
           justifyContent: 'center',
@@ -123,7 +149,11 @@ export default function GameScreen({navigation}) {
         <Text style={styles.wordInput}>{wordinput ? `${wordinput}` : ''}</Text>
       </View>
       <View style={styles.keyboard}>
-        <KeyBoard keyBoard={keyboard} />
+        <KeyBoard
+          keyBoard={keyboard}
+          keyboardStyle={game.keyboardStyle}
+          hidden={game.hidden}
+        />
       </View>
     </SafeAreaView>
   );
@@ -137,9 +167,7 @@ const styles = StyleSheet.create({
   },
   scoreTexte: {
     paddingVertical: 20,
-    margin: 10,
     color: yellow,
-
     fontSize: 20,
     fontWeight: 'bold',
     top: 10
@@ -152,7 +180,7 @@ const styles = StyleSheet.create({
   },
   wordInputContainer: {
     position: 'absolute',
-    bottom: 220,
+    bottom: 240,
     height: 50,
     padding: 10,
     alignSelf: 'center',
