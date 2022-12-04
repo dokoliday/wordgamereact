@@ -1,202 +1,225 @@
+import React, {useEffect, useRef} from 'react';
 import {
   Animated,
-  Image,
+  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity
 } from 'react-native';
+import {useSelector} from 'react-redux';
+
+import {TRootState} from '../redux/types';
 import {faker} from '@faker-js/faker';
-import {useEffect, useRef, useState} from 'react';
 
 import {View} from '../components/Themed';
-import {KeyBoard} from '../components/keyBoard';
-import {fetchGifRequest} from '../redux/reducers/gifExempleReducer';
-import {useAppSelector, useAppDispatch} from '../hooks/reduxHooks';
+import {KeyBoard} from '../components/keyboard/keyboard';
+import {useAppDispatch} from '../hooks/reduxHooks';
+import {darkBlue, pink, turquoise, yellow} from '../assets/colors';
+import {
+  setKeyboard,
+  setLife,
+  setScore,
+  setWord,
+  setWordInput
+} from '../redux/reducers/gameReducer';
+import {keyBoardPatterns} from '../components/keyboard/keyboardPatterns';
+import {TGame} from './HomeScreen';
+import AnimatedGradient from '../components/AnimatedLinearComponent.tsx';
 
-export default function GameScreen() {
+export default function GameScreen({navigation, route}) {
+  const {word, wordinput, score, keyboard, life} = useSelector(
+    (state: TRootState) => state.gameReducer
+  );
   faker.setLocale('fr');
-  const [word, setWord] = useState('');
-  const [wordInput, setWordInput] = useState('');
-  const [color, setColor] = useState('green');
-  const [score, setScore] = useState(0);
-  const [round, setRound] = useState(0);
-  const [countDown, setCountDown] = useState(15);
+
+  const game: TGame = route.params.game;
 
   const wordAnimationRef = useRef(new Animated.Value(0)).current;
   const dispatch = useAppDispatch();
 
-  const image = useAppSelector(state => state.gifExempleReducer.value);
+  useEffect(() => {
+    dispatch(setScore({score: 0}));
+    launchGame();
+    return () => {
+      dispatch(setLife({life: 3}));
+    };
+  }, []);
 
   useEffect(() => {
-    if (word === wordInput && word) {
-      setScore(score + 10);
+    if (score) {
       launchGame();
     }
-  }, [wordInput]);
+  }, [score]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCountDown(countDown => countDown - 1);
-    }, 1000);
-    if (round === 0) {
-      clearInterval(interval);
+    if (life > 0 || game.life === 'infinite') {
+      launchGame();
+    } else {
+      wordAnimation.stop();
+      navigation.navigate('Home');
     }
-
-    return () => clearInterval(interval);
-  }, [round]);
-
-  useEffect(() => {
-    if (countDown === 0) {
-      alert(`Ton score est de ${score}`);
-      setScore(0);
-      setRound(0);
-    }
-  }, [countDown]);
+  }, [life]);
 
   const wordAnimation = Animated.timing(wordAnimationRef, {
-    toValue: -350,
-    duration: 15000,
+    toValue: 400,
+    duration:
+      game.speedLevel === 'easy'
+        ? 10000
+        : game.speedLevel === 'medium'
+        ? 7000
+        : 4000,
     useNativeDriver: true
   });
 
-  const onKeyBoardTap = (letter: string) => {
-    if (letter === '<') {
-      return setWordInput(
-        wordInput
-          .split('')
-          .slice(0, wordInput.length - 1)
-          .join('')
-      );
-    }
-    if (letter === '<=') {
-      return setWordInput('');
-    }
-    if (word.split('')[wordInput.length] !== letter) {
-      setColor('red');
-    } else {
-      setColor('green');
-    }
-    setWordInput(
-      (wordInput + letter)
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-    );
-  };
-
   const launchGame = () => {
-    const word = faker.random
-      .word()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-    setCountDown(15);
-    wordAnimationRef.setValue(280);
-    setWordInput('');
-    setWord(word);
-    dispatch(fetchGifRequest(word));
-    wordAnimation.start();
-    setRound(round + 1);
+    wordAnimationRef.setValue(0);
+
+    dispatch(
+      setKeyboard({
+        keyboard:
+          game.keyboard === 'azerty'
+            ? keyBoardPatterns.regular.azertyKeyboardLetters()
+            : game.keyboard === 'querty'
+            ? keyBoardPatterns.regular.qwertyKeyboardLetters()
+            : keyBoardPatterns.shuffle()
+      })
+    );
+
+    dispatch(
+      setWord({
+        word: faker.random
+          .word()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+      })
+    );
+
+    wordAnimation.start(({finished}) => {
+      dispatch(setWordInput({wordinput: ''}));
+      if (finished) {
+        if (game.life === 'infinite' && life < 3) {
+          dispatch(setLife({life: 3}));
+        } else {
+          dispatch(setLife({life: life - 1}));
+        }
+      }
+    });
   };
-
-  return (
-    <View style={{width: '100%', height: '100%'}}>
-      <View
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-around'
-        }}>
-        <Text
-          style={{
-            paddingVertical: 20,
-            margin: 10
-          }}>
-          SCORE : {score}
-        </Text>
-
-        {image && round !== 0 ? (
-          <View
-            style={{
-              borderWidth: 4,
-              borderRadius: 20,
-              margin: 10,
-              width: 100,
-              overflow: 'hidden'
-            }}>
-            <Image source={{uri: image}} style={{width: 100, height: 100}} />
-          </View>
-        ) : (
-          <TouchableOpacity
-            disabled={score !== 0}
-            style={{marginTop: 40}}
-            onPress={() => {
-              launchGame();
-            }}>
-            <Text
-              style={{
-                borderWidth: 4,
-                paddingVertical: 20,
-                borderRadius: 20,
-                textAlign: 'center',
-                opacity: score !== 0 ? 0.3 : 1,
-                margin: 10,
-                width: 100
-              }}>
-              PLAY
-            </Text>
-          </TouchableOpacity>
-        )}
-        <Text
-          style={{
-            paddingVertical: 20,
-            margin: 5
-          }}>
-          TIMING : {countDown}
-        </Text>
+  const gameScreen = () => (
+    <>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.scoreTexte}>retour</Text>
+        </TouchableOpacity>
+        <Text style={styles.scoreTexte}>SCORE : {score}</Text>
+        <View style={{flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0)'}}>
+          {game.life === 'infinite' ? (
+            <Text style={styles.scoreTexte}>Infinite</Text>
+          ) : (
+            Array(life)
+              .fill('')
+              .map((_, index) => {
+                return (
+                  <Text key={index} style={styles.scoreTexte}>
+                    X
+                  </Text>
+                );
+              })
+          )}
+        </View>
       </View>
-      <View style={{alignSelf: 'center'}}>
-        <Text
-          style={{
-            paddingVertical: 20,
-            margin: 5
-          }}>
-          ROUND : {round}
-        </Text>
-      </View>
+
       <Animated.View
         style={{
+          justifyContent: 'center',
+          flexDirection: 'row',
           transform: [
             {
-              translateX: wordAnimationRef
+              translateY: wordAnimationRef
             }
           ]
         }}>
-        <Text
-          style={{
-            textAlign: 'center',
-            fontSize: 40,
-            marginTop: 40,
-            fontWeight: 'bold'
-          }}>
-          {word ? `${word}` : ''}
-        </Text>
+        {word.split('').map((e, index) => {
+          return (
+            <Text
+              key={index}
+              style={{
+                ...styles.wordText,
+                color:
+                  word.split('')[index] === wordinput.split('')[index]
+                    ? 'green'
+                    : 'white'
+              }}>
+              {e ? `${e}` : ''}
+            </Text>
+          );
+        })}
       </Animated.View>
-      <Text
-        style={{
-          textAlign: 'center',
-          fontSize: 20,
-          color
-        }}>
-        {wordInput ? `${wordInput}` : ''}
-      </Text>
-      <View style={{position: 'absolute', bottom: 140}}>
-        <KeyBoard onKeyBoardTap={onKeyBoardTap} />
+      <View style={styles.wordInputContainer}>
+        <Text style={styles.wordInput}>{wordinput ? `${wordinput}` : ''}</Text>
       </View>
-    </View>
+      <View style={styles.keyboard}>
+        <KeyBoard
+          keyBoard={keyboard}
+          keyboardStyle={game.keyboardStyle}
+          hidden={game.hidden}
+        />
+      </View>
+    </>
+  );
+  return (
+    <SafeAreaView style={styles.container}>
+      {game.background === 'regular' ? (
+        gameScreen()
+      ) : (
+        <AnimatedGradient>{gameScreen()}</AnimatedGradient>
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {}
+  container: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0,0,0,0)'
+  },
+  scoreTexte: {
+    paddingVertical: 20,
+    color: yellow,
+    fontSize: 20,
+    fontWeight: 'bold',
+    top: 10
+  },
+  wordText: {
+    textAlign: 'center',
+    fontSize: 40,
+    marginTop: 40,
+    fontWeight: 'bold'
+  },
+  wordInputContainer: {
+    borderWidth: 2,
+    borderColor: turquoise,
+    backgroundColor: pink,
+    position: 'absolute',
+    bottom: 240,
+    height: 50,
+    padding: 10,
+    alignSelf: 'center',
+    borderRadius: 40,
+    width: '80%'
+  },
+  wordInput: {
+    textAlign: 'center',
+    fontSize: 23,
+    color: turquoise,
+    fontWeight: 'bold'
+  },
+  topBar: {
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0)'
+  },
+  keyboard: {position: 'absolute', bottom: 70}
 });

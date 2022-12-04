@@ -3,6 +3,7 @@ import createSagaMiddleware from 'redux-saga';
 import {fork, call, all} from 'redux-saga/effects';
 import * as sagas from './sagas';
 import {fetchGif} from './reducers/gifExempleReducer';
+import {game} from './reducers/gameReducer';
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
@@ -39,7 +40,8 @@ const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
   reducer: {
-    gifExempleReducer: fetchGif.reducer
+    gifExempleReducer: fetchGif.reducer,
+    gameReducer: game.reducer
   },
   middleware: [sagaMiddleware],
   devTools: process.env.NODE_ENV !== 'production',
