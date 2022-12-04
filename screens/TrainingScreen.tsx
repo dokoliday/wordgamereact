@@ -92,7 +92,7 @@ export default function HomeScreen({navigation}) {
               borderColor: pink,
               padding: 2
             }}>
-            flase
+            false
           </Text>
         </TouchableOpacity>
       </View>
