@@ -51,7 +51,6 @@ export const KeyBoard = ({keyBoard, keyboardStyle, hidden}) => {
           key={index}
           onPress={() => {
             onKeyBoardTap(letter);
-            Vibration.vibrate(100);
           }}
           style={styles.letterInput}>
           {keyboardStyle === 'psyche' ? (

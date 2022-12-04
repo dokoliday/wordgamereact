@@ -14,7 +14,7 @@ import {faker} from '@faker-js/faker';
 import {View} from '../components/Themed';
 import {KeyBoard} from '../components/keyboard/keyboard';
 import {useAppDispatch} from '../hooks/reduxHooks';
-import {darkBlue, yellow} from '../assets/colors';
+import {darkBlue, pink, turquoise, yellow} from '../assets/colors';
 import {
   setKeyboard,
   setLife,
@@ -24,6 +24,7 @@ import {
 } from '../redux/reducers/gameReducer';
 import {keyBoardPatterns} from '../components/keyboard/keyboardPatterns';
 import {TGame} from './HomeScreen';
+import AnimatedGradient from '../components/AnimatedLinearComponent.tsx';
 
 export default function GameScreen({navigation, route}) {
   const {word, wordinput, score, keyboard, life} = useSelector(
@@ -55,7 +56,6 @@ export default function GameScreen({navigation, route}) {
       launchGame();
     } else {
       wordAnimation.stop();
-      dispatch(setLife({life: 3}));
       navigation.navigate('Home');
     }
   }, [life]);
@@ -98,24 +98,35 @@ export default function GameScreen({navigation, route}) {
     wordAnimation.start(({finished}) => {
       dispatch(setWordInput({wordinput: ''}));
       if (finished) {
-        dispatch(setLife({life: life - 1}));
+        if (game.life === 'infinite' && life < 3) {
+          dispatch(setLife({life: 3}));
+        } else {
+          dispatch(setLife({life: life - 1}));
+        }
       }
     });
   };
-
-  return (
-    <SafeAreaView style={styles.container}>
+  const gameScreen = () => (
+    <>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.navigate('Home')}>
           <Text style={styles.scoreTexte}>retour</Text>
         </TouchableOpacity>
         <Text style={styles.scoreTexte}>SCORE : {score}</Text>
         <View style={{flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0)'}}>
-          {Array(life)
-            .fill('')
-            .map(e => {
-              return <Text style={styles.scoreTexte}>X</Text>;
-            })}
+          {game.life === 'infinite' ? (
+            <Text style={styles.scoreTexte}>Infinite</Text>
+          ) : (
+            Array(life)
+              .fill('')
+              .map((_, index) => {
+                return (
+                  <Text key={index} style={styles.scoreTexte}>
+                    X
+                  </Text>
+                );
+              })
+          )}
         </View>
       </View>
 
@@ -155,6 +166,15 @@ export default function GameScreen({navigation, route}) {
           hidden={game.hidden}
         />
       </View>
+    </>
+  );
+  return (
+    <SafeAreaView style={styles.container}>
+      {game.background === 'regular' ? (
+        gameScreen()
+      ) : (
+        <AnimatedGradient>{gameScreen()}</AnimatedGradient>
+      )}
     </SafeAreaView>
   );
 }
@@ -179,6 +199,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   wordInputContainer: {
+    borderWidth: 2,
+    borderColor: turquoise,
+    backgroundColor: pink,
     position: 'absolute',
     bottom: 240,
     height: 50,
@@ -189,8 +212,8 @@ const styles = StyleSheet.create({
   },
   wordInput: {
     textAlign: 'center',
-    fontSize: 20,
-    color: darkBlue,
+    fontSize: 23,
+    color: turquoise,
     fontWeight: 'bold'
   },
   topBar: {
