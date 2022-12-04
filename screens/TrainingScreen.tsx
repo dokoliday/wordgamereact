@@ -247,7 +247,7 @@ export default function HomeScreen({navigation}) {
         {Object.keys(customGame).map(key => {
           return (
             <View style={{flexDirection: 'row'}}>
-              <Text style={{color: turquoise, fontSize: 20}}>{key} :</Text>
+              <Text style={{color: turquoise, fontSize: 20}}>{key} : </Text>
               <Text style={{color: pink, fontSize: 20}}>
                 {customGame[key].toString()}
               </Text>
